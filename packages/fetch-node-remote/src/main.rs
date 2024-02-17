@@ -2,7 +2,7 @@ use std::collections::hash_map::Values;
 use chrono::{DateTime, Utc};
 use colored::*;
 use reqwest;
-use semver::Version;
+use semver::{Version,VersionReq};
 use serde::Deserialize;
 use serde_json::{Value, Map, json, to_string_pretty};
 use std::collections::HashMap;
@@ -28,7 +28,7 @@ pub struct NodeScheduleH {
     pub version: String,
 }
 
-fn fetch_node_schedule() {
+fn fetch_node_schedule() -> Vec<NodeScheduleH>{
     let resp = reqwest::blocking::get(
         "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json",
     )
@@ -42,11 +42,14 @@ fn fetch_node_schedule() {
     if let Some(json) = res.as_object() {
         json.keys().for_each(|key| {
             if let Some(item) = json.get(key) {
+
+                let version = &key.as_str()[1..];
+
                 v.push(
                     NodeScheduleH {
                         start: item.get("start").unwrap().to_string(),
                         end: item.get("end").unwrap().to_string(),
-                        version: key.to_string()
+                        version: version.to_string(),
                     }
                 );
 
@@ -55,18 +58,9 @@ fn fetch_node_schedule() {
         });
     }
 
-    println!("{:?}", v);
+    v.sort_by(|a, b| a.end.cmp(&b.end).reverse());
 
-
-    // let keys: Vec<String> = json.keys().cloned().collect();
-    // for key in keys {
-    //     if let Some(value) = json.get_mut(&key)      {
-    //         value.version = Some(key.clone());
-    //     }
-    // }
-    //
-    //
-    // json.into_values().collect()
+    v
 }
 
 fn fetch_node_versions() -> Vec<(Version, String)> {
@@ -100,17 +94,14 @@ fn fetch_node_versions() -> Vec<(Version, String)> {
 
     json.sort_by(|a, b| a.0.cmp(&b.0));
 
-    // for (_, line) in json {
-    //     println!("{}", line);
-    // }
     json
 }
 
 fn main() {
     let json = fetch_node_schedule();
-    // json.iter().for_each(|node| {
-    //     println!("{:?}", node);
-    // });
+    json.iter().for_each(|node| {
+        println!("{:?}", node);
+    });
 
     // let json = fetch_node_versions();
     // for (_, line) in json {
