@@ -4,7 +4,7 @@ use colored::*;
 use reqwest;
 use semver::Version;
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{Value, Map, json, to_string_pretty};
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
@@ -21,35 +21,52 @@ pub struct NodeMeta {
     pub lts: Option<Value>,
     pub security: Option<Value>,
 }
-
-#[derive(Debug, Deserialize)]
-pub struct NodeSchedule {
+#[derive(Debug)]
+pub struct NodeScheduleH {
     pub start: String,
     pub end: String,
-    // pub lts: Option<String>,
-    // pub maintenance: Option<String>,
-    // pub codename: Option<String>,
-    pub version: Option<String>,
+    pub version: String,
 }
 
-
-fn fetch_node_schedule() -> Vec<NodeSchedule> {
+fn fetch_node_schedule() {
     let resp = reqwest::blocking::get(
         "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json",
     )
         .expect("fetch nodejs.org/dist/index.json failed.");
-    let mut json: HashMap<String, NodeSchedule> =
-        resp.json::<HashMap<String, NodeSchedule>>().expect("Error");
+    let res: Value =
+        resp.json::<Value>().expect("Error");
 
-    let keys: Vec<String> = json.keys().cloned().collect();
-    for key in keys {
-        if let Some(value) = json.get_mut(&key)      {
-            value.version = Some(key.clone());
-        }
+
+    let mut v: Vec<NodeScheduleH> = Vec::new();
+
+    if let Some(json) = res.as_object() {
+        json.keys().for_each(|key| {
+            if let Some(item) = json.get(key) {
+                v.push(
+                    NodeScheduleH {
+                        start: item.get("start").unwrap().to_string(),
+                        end: item.get("end").unwrap().to_string(),
+                        version: key.to_string()
+                    }
+                );
+
+            }
+
+        });
     }
 
+    println!("{:?}", v);
 
-    json.into_values().collect()
+
+    // let keys: Vec<String> = json.keys().cloned().collect();
+    // for key in keys {
+    //     if let Some(value) = json.get_mut(&key)      {
+    //         value.version = Some(key.clone());
+    //     }
+    // }
+    //
+    //
+    // json.into_values().collect()
 }
 
 fn fetch_node_versions() -> Vec<(Version, String)> {
@@ -91,9 +108,9 @@ fn fetch_node_versions() -> Vec<(Version, String)> {
 
 fn main() {
     let json = fetch_node_schedule();
-    json.iter().for_each(|node| {
-        println!("{:?}", node);
-    });
+    // json.iter().for_each(|node| {
+    //     println!("{:?}", node);
+    // });
 
     // let json = fetch_node_versions();
     // for (_, line) in json {
