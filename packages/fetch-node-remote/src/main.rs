@@ -137,6 +137,11 @@ fn main() {
             false
         };
 
+        let is_lts = match item.lts {
+            Lts::Str(_) => true,
+            Lts::Bool(_) => false,
+        };
+
         let lts_str = match item.lts {
             Lts::Str(s) => {
                 if is_active {
@@ -154,7 +159,7 @@ fn main() {
         //     item.version.strikethrough().bright_black().to_string()
         // };
 
-        let min_width = if is_active { 10 } else { 0 };
+        let min_width = if is_lts { 10 } else { 0 };
 
         let line = format!("{:<min_width$} {}", item.version, lts_str);
 
