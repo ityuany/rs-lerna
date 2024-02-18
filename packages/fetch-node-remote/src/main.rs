@@ -163,7 +163,7 @@ fn main() {
 
         let min_width = if is_lts { 10 } else { 0 };
 
-        let line = format!("v{:<min_width$} {} {}", item.version, end, lts_str);
+        let line = format!("v{:<7} {:<12} {}", item.version, end, lts_str);
 
         if is_active {
             println!("{}", line);
