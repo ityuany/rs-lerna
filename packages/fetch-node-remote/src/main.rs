@@ -102,39 +102,41 @@ fn fetch_node_versions() -> Vec<NodeMeta1> {
 }
 
 fn main() {
-    let sss = String::from("2014-07-31");
+    // let sss = String::from("2014-07-31");
 
-    let s = NaiveDate::parse_from_str(&sss, "%Y-%m-%d").expect("parse end date error");
+    // let s = NaiveDate::parse_from_str(&sss, "%Y-%m-%d").expect("parse end date error");
 
-    println!("{:?}", s);
+    // println!("{:?}", s);
 
-    let s = VersionReq::parse("9").unwrap();
+    // let s = VersionReq::parse("9").unwrap();
 
-    let a = Version::parse("0.9.0").unwrap();
+    // let a = Version::parse("0.9.0").unwrap();
 
-    println!("{}", s.matches(&a));
+    // println!("{}", s.matches(&a));
 
-    let json = fetch_node_schedule();
+    let schedule_vec = fetch_node_schedule();
 
     let find_schedule = |item: &NodeMeta1| {
-        json.iter().find(|schedule| {
+        schedule_vec.iter().find(|schedule| {
             VersionReq::parse(&schedule.version)
                 .unwrap()
                 .matches(&Version::parse(&item.version).unwrap())
         })
     };
 
-    let json = fetch_node_versions();
-    for item in json {
-        let res = find_schedule(&item);
+    let node_version_vec = fetch_node_versions();
+    for item in node_version_vec {
+        let schedule = find_schedule(&item);
 
-        let is_active = if let Some(schedule) = res {
-            // println!("{} , {:?}", schedule.end, res);
-            let end =
+        let (is_active, end) = if let Some(schedule) = schedule {
+            let end_date =
                 NaiveDate::parse_from_str(&schedule.end.trim_matches('"'), "%Y-%m-%d").unwrap();
-            end > Utc::now().date_naive()
+            (
+                end_date > Utc::now().date_naive(),
+                format!(" {}", schedule.end.trim_matches('"')),
+            )
         } else {
-            false
+            (false, "".to_string())
         };
 
         let is_lts = match item.lts {
@@ -161,7 +163,7 @@ fn main() {
 
         let min_width = if is_lts { 10 } else { 0 };
 
-        let line = format!("{:<min_width$} {}", item.version, lts_str);
+        let line = format!("v{:<min_width$} {} {}", item.version, end, lts_str);
 
         if is_active {
             println!("{}", line);
