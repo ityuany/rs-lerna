@@ -133,10 +133,10 @@ fn main() {
                 NaiveDate::parse_from_str(&schedule.end.trim_matches('"'), "%Y-%m-%d").unwrap();
             (
                 end_date > Utc::now().date_naive(),
-                format!(" {}", schedule.end.trim_matches('"')),
+                format!("{}", schedule.end.trim_matches('"')),
             )
         } else {
-            (false, "".to_string())
+            (false, "Not Found".to_string())
         };
 
         let is_lts = match item.lts {
@@ -163,7 +163,7 @@ fn main() {
 
         let min_width = if is_lts { 10 } else { 0 };
 
-        let line = format!("v{:<7} {:<12} {}", item.version, end, lts_str);
+        let line = format!("{:<1} v{:<8} {:<11} {}", "", item.version, end, lts_str);
 
         if is_active {
             println!("{}", line);
